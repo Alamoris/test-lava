@@ -7,4 +7,4 @@ metadata:
 
 run:
     steps:
-        - lava-test-case fwts --shell ./test-lava/scripts/fwts.sh
+        - lava-test-case fwts --shell ./scripts/fwts.sh
