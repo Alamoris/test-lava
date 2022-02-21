@@ -1,0 +1,10 @@
+metadata: 
+    format: Lava-Test Test Definition 1.0
+    name: fwts
+    description: "Base fwts test"
+    maintainer:
+        - v.bogoslovskiy@yadro.com
+
+run:
+    steps:
+        - lava-test-case fwts --shell ./test-lava/scripts/fwts.sh
