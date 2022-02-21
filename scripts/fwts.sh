@@ -7,3 +7,4 @@ autoreconf -ivf
 make
 make install
 lava-test-case hwts --shell fwts
+
