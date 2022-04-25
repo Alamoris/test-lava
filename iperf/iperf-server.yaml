@@ -32,6 +32,6 @@ params:
 
 run:
     steps:
-        - cd ./automated/linux/iperf/
+        - cd ./iperf/
         - ./iperf.sh -s "${SKIP_INSTALL}" -e "${SERVER_ETHERNET_DEVICE}"
-        - ../../utils/send-to-lava.sh ./output/result.txt
+        - ../utils/send-to-lava.sh ./output/result.txt

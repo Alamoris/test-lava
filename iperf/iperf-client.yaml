@@ -42,7 +42,7 @@ params:
 
 run:
     steps:
-        - cd ./automated/linux/iperf/
+        - cd ./iperf/
         - ./iperf.sh -c "${SERVER}" -t "${TIME}" -p "${THREADS}" -s "${SKIP_INSTALL}" "${AFFINITY}" "${REVERSE}"
-        - ../../utils/send-to-lava.sh ./output/result.txt
+        - ../utils/send-to-lava.sh ./output/result.txt
 
