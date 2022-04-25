@@ -1,7 +1,7 @@
 #!/bin/sh -ex
 
 # shellcheck disable=SC1091
-. ../../lib/sh-test-lib
+# . ../../lib/sh-test-lib
 OUTPUT="$(pwd)/output"
 RESULT_FILE="${OUTPUT}/result.txt"
 LOGFILE="${OUTPUT}/iperf.txt"
