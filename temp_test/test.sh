@@ -23,6 +23,8 @@ echo $static_network_header > /etc/netplan/01-netcfg.yaml
 #ip addr add 192.168.0.${adress_id}/255.255.255.0 dev ${interface}
 #ip route replace default via 192.168.0.1
 
+ip addr add 192.168.0.61/255.255.255.0 dev ens1f0
+
 
 adress_id=50
 IFS=','
@@ -32,8 +34,7 @@ for interface in $interfaces
 do
     static_interface="    ${interface}:
       dhcp4: no
-      addresses: [192.168.1.${adress_id}/24]
-      gateway4: 192.168.1.1"
+      addresses: [192.168.1.${adress_id}/24]"
     echo $static_interface >> /etc/netplan/01-netcfg.yaml
     adress_id=$((adress_id+1))
 done
