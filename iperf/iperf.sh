@@ -116,7 +116,7 @@ if [ "${SERVER}" = "" ]; then
 
     # We are running in server mode.
     # Start the server and report pass/fail
-    cmd="iperf3 -s -D"
+    cmd="iperf3 -s -B 192.168.80.50 -D"
     ${cmd}
     if pgrep -f "${cmd}" > /dev/null; then
         result="pass"
@@ -130,7 +130,7 @@ if [ "${SERVER}" = "" ]; then
         ${cmd} client-done
     fi
 else
-    client_ip=50
+    client_ip=80
 
     IFS=','
     for interface in $interfaces
@@ -139,7 +139,7 @@ else
         dhcp4: no
         addresses: [192.168.80.${client_ip}/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
-        adress_id=$((client_ip+1))
+        client_ip=$((client_ip+1))
     done
 
     netplan apply
