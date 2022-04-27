@@ -1,0 +1,13 @@
+metadata:
+    name: lava-test
+    format: "Lava-Test Test Definition 1.0"
+    description: "Lava command test"
+    maintainer:
+        - v.bogoslovskiy@yadro.com
+    environment:
+        - lava-test-shell
+
+run:
+    steps:
+        - cd ./temp_test/
+        - ./test.sh
