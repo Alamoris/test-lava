@@ -65,8 +65,41 @@ else
     esac
 fi
 
+vlan_interfaces_lines=$(lava-vland-self)
+
+interfaces=""
+
+IFS=$'\n'
+for line in $vlan_interfaces_lines
+do
+    interfaces+=$(echo $line | cut -d',' -f1)$','
+done
+IFS=''
+
+static_network_header="network:
+  version: 2
+  renderer: networkd
+  ethernets:"
+
+echo $static_network_header > /etc/netplan/01-netcfg.yaml
+
+
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
+    server_ip=50
+
+    IFS=','
+    for interface in $interfaces
+    do
+        static_interface="    ${interface}:
+        dhcp4: no
+        addresses: [192.168.80.${adress_id}/24]"
+        echo $static_interface >> /etc/netplan/01-netcfg.yaml
+        adress_id=$((server_ip+1))
+    done
+    netplan apply
+    ifconfig
+
     cmd="lava-echo-ipv4"
     if which "${cmd}"; then
         ipaddr=$(${cmd} "${ETH}" | tr -d '\0')
@@ -97,6 +130,22 @@ if [ "${SERVER}" = "" ]; then
         ${cmd} client-done
     fi
 else
+    client_ip=50
+
+    IFS=','
+    for interface in $interfaces
+    do
+        static_interface="    ${interface}:
+        dhcp4: no
+        addresses: [192.168.80.${adress_id}/24]"
+        echo $static_interface >> /etc/netplan/01-netcfg.yaml
+        adress_id=$((client_ip+1))
+    done
+
+    netplan apply
+
+    ifconfig
+
     cmd="lava-wait"
     if which "${cmd}"; then
         ${cmd} server-ready
@@ -111,6 +160,9 @@ else
     fi
     # We are running in client mode
     # Run iperf test with unbuffered output mode.
+    # stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+    #     | tee "${LOGFILE}"
+
     stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
         | tee "${LOGFILE}"
 

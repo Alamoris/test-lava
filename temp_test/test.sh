@@ -19,13 +19,6 @@ static_network_header="network:
 echo $static_network_header > /etc/netplan/01-netcfg.yaml
 
 
-#ip addr flush dev ${interface}
-#ip addr add 192.168.0.${adress_id}/255.255.255.0 dev ${interface}
-#ip route replace default via 192.168.0.1
-
-ip addr add 192.168.0.61/255.255.255.0 dev ens1f0
-
-
 adress_id=50
 IFS=','
 
@@ -41,11 +34,3 @@ done
 
 netplan apply
 ifconfig
-
-#static_interface="
-#${interface}:
-#    dhcp4: no
-#    addresses: [192.168.1.${adress_id}/24]
-#    gateway4: 192.168.1.1
-#"
-#echo $static_interface >> /etc/netplan/01-netcfg.yaml
