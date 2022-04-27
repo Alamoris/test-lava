@@ -1,8 +1,10 @@
 #!/bin/sh -ex
 
-echo $(lava-vland-self)
 vlan_interfaces_lines=$(lava-vland-self)
-IFS=$'\n'
+
+echo $(vlan_interfaces_lines)
+echo $(vlan_interfaces_lines) | while read -r a; do echo $a; done
+
 
 interfaces=()
 
