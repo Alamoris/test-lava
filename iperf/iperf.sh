@@ -93,7 +93,7 @@ if [ "${SERVER}" = "" ]; then
     do
         static_interface="    ${interface}:
         dhcp4: no
-        addresses: [192.168.80.${adress_id}/24]"
+        addresses: [192.168.80.${server_ip}/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
         adress_id=$((server_ip+1))
     done
@@ -137,7 +137,7 @@ else
     do
         static_interface="    ${interface}:
         dhcp4: no
-        addresses: [192.168.80.${adress_id}/24]"
+        addresses: [192.168.80.${client_ip}/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
         adress_id=$((client_ip+1))
     done
