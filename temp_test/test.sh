@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 
 vlan_interfaces_lines=$(lava-vland-self)
 
@@ -6,9 +6,7 @@ echo $vlan_interfaces_lines
 
 interfaces=()
 
-IFS='
-'
-set -f
+IFS='\n'
 
 for line in ${vlan_interfaces_lines}
 do
@@ -16,5 +14,4 @@ do
     echo $interfaces
 done
 
-set +f
-unset IFS
+
