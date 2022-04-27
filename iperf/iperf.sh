@@ -95,7 +95,7 @@ if [ "${SERVER}" = "" ]; then
         dhcp4: no
         addresses: [192.168.80.${server_ip}/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
-        adress_id=$((server_ip+1))
+        server_ip=$((server_ip+1))
     done
     netplan apply
     ifconfig
