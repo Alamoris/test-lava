@@ -26,7 +26,7 @@ for interface in $interfaces
 do
     ip addr flush dev ${interface}
     ip addr add 192.168.0.${adress_id}/255.255.255.0 dev ${interface}
-    ip route change default via 192.168.0.1
+    ip route replace default via 192.168.0.1
     adress_id=$(adress_id+1)
 done
 
