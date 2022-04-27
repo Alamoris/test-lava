@@ -2,8 +2,8 @@
 
 vlan_interfaces_lines=$(lava-vland-self)
 
-echo $(vlan_interfaces_lines)
-echo $(vlan_interfaces_lines) | while read -r a; do echo $a; done
+echo $vlan_interfaces_lines
+echo $vlan_interfaces_lines | while read -r a; do echo $a; done
 
 
 interfaces=()
