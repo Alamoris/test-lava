@@ -1,4 +1,4 @@
-#!/bin/sh -ex
+#!/bin/bash -ex
 
 # shellcheck disable=SC1091
 . ../utils/sh-test-lib
