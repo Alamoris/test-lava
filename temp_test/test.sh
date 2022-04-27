@@ -9,6 +9,7 @@ for line in $vlan_interfaces_lines
 do
     interfaces+=$(echo $line | cut -d',' -f1)$','
 done
+IFS=''
 
 static_network_header="
 network:\n
