@@ -6,7 +6,7 @@ echo $vlan_interfaces_lines
 
 interfaces=()
 
-IFS='\n'
+IFS=$'\n'
 
 for line in ${vlan_interfaces_lines}
 do
