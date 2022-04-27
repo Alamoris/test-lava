@@ -11,9 +11,9 @@ do
 done
 
 static_network_header="
-network:
-  version: 2
-  renderer: networkd
+network:\n
+  version: 2\n
+  renderer: networkd\n
   ethernets:"
 
 echo $static_network_header > /etc/netplan/01-netcfg.yaml
@@ -26,6 +26,8 @@ echo $static_network_header > /etc/netplan/01-netcfg.yaml
 
 adress_id=50
 IFS=','
+
+
 for interface in $interfaces
 do
     static_interface="
