@@ -16,7 +16,7 @@ network:
   renderer: networkd
   ethernets:"
 
-echo $static_network_header >> /etc/netplan/01-netcfg.yaml
+echo $static_network_header > /etc/netplan/01-netcfg.yaml
 
 
 #ip addr flush dev ${interface}
@@ -34,7 +34,7 @@ do
       addresses: [192.168.1.${adress_id}/24]
       gateway4: 192.168.1.1"
     echo $static_interface >> /etc/netplan/01-netcfg.yaml
-    adress_id=$(adress_id+1)
+    adress_id=$((adress_id+1))
 done
 
 netplan apply
