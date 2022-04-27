@@ -14,5 +14,5 @@ done
 IFS=','
 for interface in $interfaces
 do
-    echo interface
+    echo $interface
 done
