@@ -1,4 +1,4 @@
-#!/bin/bash -ex
+#!/bin/sh -ex
 
 # shellcheck disable=SC1091
 . ../utils/sh-test-lib
@@ -82,68 +82,81 @@ static_network_header="network:
   ethernets:"
 
 echo $static_network_header > /etc/netplan/01-netcfg.yaml
-
+global_adress=100
 
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
-    server_ip=50
-
     IFS=','
     for interface in $interfaces
     do
         static_interface="    ${interface}:
         dhcp4: no
-        addresses: [192.168.80.${server_ip}/24]"
+        addresses: [192.168.${global_adress}.0/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
-        server_ip=$((server_ip+1))
+        global_adress=$((global_adress+1))
     done
     netplan apply
     ifconfig
 
-    cmd="lava-echo-ipv4"
-    if which "${cmd}"; then
-        ipaddr=$(${cmd} "${ETH}" | tr -d '\0')
-        if [ -z "${ipaddr}" ]; then
-            lava-test-raise "${ETH} not found"
+    ip_addreses=()
+    for interface in $interfaces
+    do
+        cmd="lava-echo-ipv4"
+        if which "${cmd}"; then
+            ipaddr=$(${cmd} "${interface}" | tr -d '\0')
+            ip_addreses=("${ip_addreses[@]}" "${ipaddr}")
+            if [ -z "${ipaddr}" ]; then
+                echo "WARNING: could not find ${interface} adress, check phisial connection"
+            fi
+        else
+            echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
         fi
-    else
-        echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
-    fi
+    done
+
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} server-ready ipaddr="${ipaddr}"
+        ${cmd} num_server_interfaces length="${#ip_addreses[@]}"
     fi
 
-    # We are running in server mode.
-    # Start the server and report pass/fail
-    cmd="iperf3 -s -B 192.168.80.50 -D"
-    ${cmd}
-    if pgrep -f "${cmd}" > /dev/null; then
-        result="pass"
-    else
-        result="fail"
+    cmd="lava-wait"
+    if which "${cmd}"; then
+        ${cmd} num_client_interfaces
     fi
-    echo "iperf3_server_started ${result}" | tee -a "${RESULT_FILE}"
+
+    r_s_counter=0
+    for active_interface in ${ip_addreses[@]}
+    do
+        cmd="lava-send"
+        if which "${cmd}"; then
+            ${cmd} server-ready-${r_s_counter} ipaddr="${ipaddr}"
+            r_s_counter=$((r_s_counter+1))
+
+        cmd="iperf3 -s -B ${active_interface} -D"
+        ${cmd}
+        if pgrep -f "${cmd}" > /dev/null; then
+            result="pass"
+        else
+            result="fail"
+        fi
+        echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
+        fi
+    done
 
     cmd="lava-wait"
     if which "${cmd}"; then
         ${cmd} client-done
     fi
 else
-    client_ip=80
-
     IFS=','
     for interface in $interfaces
     do
         static_interface="    ${interface}:
         dhcp4: no
-        addresses: [192.168.80.${client_ip}/24]"
+        addresses: [192.168.${global_adress}.1/24]"
         echo $static_interface >> /etc/netplan/01-netcfg.yaml
-        client_ip=$((client_ip+1))
+        global_adress=$((global_adress+1))
     done
-
     netplan apply
-
     ifconfig
 
     cmd="lava-wait"
