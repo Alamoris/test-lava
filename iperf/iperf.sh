@@ -110,7 +110,7 @@ if [ "${SERVER}" = "" ]; then
 
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} num_server_interfaces s_length="$(echo -n ${ip_addreses} | wc -w)"
+        ${cmd} num_server_interfaces s_length=" $(echo -n ${ip_addreses} | wc -w)"
     fi
 
     # TODO
