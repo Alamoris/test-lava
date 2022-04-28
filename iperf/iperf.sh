@@ -89,15 +89,20 @@ if [ "${SERVER}" = "" ]; then
     sleep 2
 
     ip_addreses=""
+    server_ips=0
     for interface in $interfaces
     do
         cmd="lava-echo-ipv4"
         if which "${cmd}"; then
-            ipaddr=$(${cmd} "${interface}" | tr -d '\0')
+            ipaddr=$(${cmd},"${interface}" | tr -d '\0')
 
             # Check if interface really active
             if ethtool ${interface} | grep -q "Link detected: yes"; then
-                ip_addreses="${ip_addreses} ${ipaddr}"
+                if [ ! -z ${cmd} ]; then
+                    ip_addreses="${ip_addreses},"
+                fi
+                ip_addreses="${ip_addreses}${ipaddr}"
+                server_ips=$((server_ips+1))
             fi
 
             if [ -z "${ipaddr}" ]; then
@@ -110,7 +115,7 @@ if [ "${SERVER}" = "" ]; then
 
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} num_server_interfaces s_length="$(echo -n ${ip_addreses} | wc -w)"
+        ${cmd} num_server_interfaces s_length="${server_ips}"
     fi
 
     # TODO
@@ -120,6 +125,7 @@ if [ "${SERVER}" = "" ]; then
     #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     # fi
 
+    IFS=','
     cmd=""
     r_s_counter=1
     for active_interface in ${ip_addreses}
@@ -129,8 +135,8 @@ if [ "${SERVER}" = "" ]; then
         cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} -D >/dev/null /&"
 
         # echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
-
     done
+    unset IFS
 
     # TODO maybe need to check by pid
     ${cmd}
@@ -162,7 +168,10 @@ else
 
             # Check if interface really active
             if ethtool ${interface} | grep -q "Link detected: yes"; then
-                ip_addreses="${ip_addreses} ${ipaddr}"
+                if [ ! -z ${cmd} ]; then
+                    ip_addreses="${ip_addreses},"
+                fi
+                ip_addreses="${ip_addreses}${ipaddr}"
             fi
 
             if [ -z "${ipaddr}" ]; then
@@ -186,6 +195,7 @@ else
         exit 1
     fi
 
+    IFS=','
     cmd=""
     counter=1
     for server_adress in $server_adreses
@@ -198,6 +208,7 @@ else
 
         counter=$((counter + 1))
     done
+    unset IFS
 
     ${cmd}
 
