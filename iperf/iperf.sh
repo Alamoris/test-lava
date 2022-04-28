@@ -21,6 +21,7 @@ REVERSE=""
 # CPU numbers are zero based, eg AFFINITY="-A 0" for the first CPU
 AFFINITY=""
 ETH="eth0"
+PORT="8000"
 
 usage() {
     echo "Usage: $0 [-c server] [-e server ethernet device] [-t time] [-p number] [-v version] [-A cpu affinity] [-R] [-s true|false]" 1>&2
@@ -93,7 +94,12 @@ if [ "${SERVER}" = "" ]; then
         cmd="lava-echo-ipv4"
         if which "${cmd}"; then
             ipaddr=$(${cmd} "${interface}" | tr -d '\0')
-            ip_addreses="${ip_addreses} ${ipaddr}"
+
+            # Check if interface really active
+            if ethtool ${interface} | grep -q "Link detected: yes"; then
+                ip_addreses="${ip_addreses} ${ipaddr}"
+            fi
+
             if [ -z "${ipaddr}" ]; then
                 echo "WARNING: could not find ${interface} adress, check phisial connection"
             fi
@@ -114,24 +120,25 @@ if [ "${SERVER}" = "" ]; then
     #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     # fi
 
+    cmd=""
     r_s_counter=1
     for active_interface in ${ip_addreses}
     do
-        cmd="lava-send"
-        if which "${cmd}"; then
-            ${cmd} server-ready-${r_s_counter} ipaddr="${active_interface}"
-            r_s_counter=$((r_s_counter+1))
+        r_s_counter=$((r_s_counter+1))
 
-            cmd="iperf3 -s -B ${active_interface} -D"
-            ${cmd}
-            if pgrep -f "${cmd}" > /dev/null; then
-                result="pass"
-            else
-                result="fail"
-            fi
-            echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
-        fi
+        cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} >/dev/null &"
+
+        # echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
+
     done
+
+    # TODO maybe need to check by pid
+    ${cmd}
+
+    cmd="lava-send"
+    if which "${cmd}"; then
+        ${cmd} servers-ready ipaddrs="${ip_addreses}"
+    fi
 
     cmd="lava-wait"
     if which "${cmd}"; then
@@ -152,7 +159,12 @@ else
         cmd="lava-echo-ipv4"
         if which "${cmd}"; then
             ipaddr=$(${cmd} "${interface}" | tr -d '\0')
-            ip_addreses="${ip_addreses} ${ipaddr}"
+
+            # Check if interface really active
+            if ethtool ${interface} | grep -q "Link detected: yes"; then
+                ip_addreses="${ip_addreses} ${ipaddr}"
+            fi
+
             if [ -z "${ipaddr}" ]; then
                 echo "WARNING: could not find ${interface} adress, check phisial connection"
             fi
@@ -163,42 +175,43 @@ else
 
     cmd="lava-wait"
     if which "${cmd}"; then
-        ${cmd} num_server_interfaces
-        num_servers=$(grep "s_length" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
+        ${cmd} ip_addreses
+        server_adreses=$(grep "ipaddrs" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     else
         echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
     fi
 
-    if [ "${num_servers}" -eq 0 ]; then
-        echo "ERROR: The number is active interfaces is 0"
+    if [ "${server_adreses}" -eq 0 ]; then
+        echo "ERROR: The number f servers is 0"
         exit 1
     fi
 
-iperf3 -c 192.168.101.10 -B 192.168.101.11 | tee log101.txt; iperf3 -c 192.168.100.10 -B 192.168.100.11 | tee log100.txt
+    cmd=""
     counter=1
-    while [ ${counter} -le ${num_servers} ]
+    for server_adress in $server_adreses
     do
-        cmd="lava-wait"
-        ${cmd} server-ready-${counter}
-        SERVER=$(grep "ipaddr" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
-
-        # TODO log interfaces
-        stdbuf -o0 iperf3 -c "${SERVER}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-            | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
-
-        # Parse logfile.
-        if [ "${THREADS}" -eq 1 ]; then
-            grep -E "(sender|receiver)" "${LOGFILE}" \
-                | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
-                | tee -a "${RESULT_FILE}"
-        elif [ "${THREADS}" -gt 1 ]; then
-            grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
-                | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
-                | tee -a "${RESULT_FILE}"
+        if [ ! -z ${cmd} ]; then
+            cmd="${cmd} &"
         fi
+        cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+            | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
 
         counter=$((counter + 1))
     done
+
+    ${cmd}
+
+    # Parse logfile.
+    if [ "${THREADS}" -eq 1 ]; then
+        grep -E "(sender|receiver)" "${LOGFILE}" \
+            | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
+            | tee -a "${RESULT_FILE}"
+    elif [ "${THREADS}" -gt 1 ]; then
+        grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
+            | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
+            | tee -a "${RESULT_FILE}"
+    fi
+
 
     # We are running in client mode
     # Run iperf test with unbuffered output mode.
