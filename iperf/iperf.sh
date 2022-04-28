@@ -98,7 +98,7 @@ if [ "${SERVER}" = "" ]; then
 
             # Check if interface really active
             if ethtool ${interface} | grep -q "Link detected: yes"; then
-                if [ ! -z ${cmd} ]; then
+                if [ ! -z ${ip_addreses} ]; then
                     ip_addreses="${ip_addreses},"
                 fi
                 ip_addreses="${ip_addreses}${ipaddr}"
@@ -168,7 +168,7 @@ else
 
             # Check if interface really active
             if ethtool ${interface} | grep -q "Link detected: yes"; then
-                if [ ! -z ${cmd} ]; then
+                if [ ! -z ${ip_addreses} ]; then
                     ip_addreses="${ip_addreses},"
                 fi
                 ip_addreses="${ip_addreses}${ipaddr}"
