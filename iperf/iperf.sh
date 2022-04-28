@@ -175,7 +175,7 @@ else
 
     cmd="lava-wait"
     if which "${cmd}"; then
-        ${cmd} ip_addreses
+        ${cmd} servers-ready
         server_adreses=$(grep "ipaddrs" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     else
         echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
