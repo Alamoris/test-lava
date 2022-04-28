@@ -4,7 +4,7 @@
 . ../utils/sh-test-lib
 OUTPUT="$(pwd)/output"
 RESULT_FILE="${OUTPUT}/result.txt"
-LOGFILE="${OUTPUT}/iperf.txt"
+LOGFILE="${OUTPUT}/iperf"
 # If SERVER is blank, we are the server, otherwise
 # If we are the client, we set SERVER to the ipaddr of the server
 SERVER=""
@@ -69,12 +69,10 @@ vlan_interfaces_lines=$(lava-vland-self)
 
 interfaces=""
 
-IFS=$'\n'
 for line in $vlan_interfaces_lines
 do
-    interfaces+=$(echo $line | cut -d',' -f1)$','
+    interfaces="${interfaces} $(echo $line | cut -d',' -f1)"
 done
-IFS=''
 
 static_network_header="network:
   version: 2
@@ -86,7 +84,6 @@ global_adress=100
 
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
-    IFS=','
     for interface in $interfaces
     do
         static_interface="    ${interface}:
@@ -98,13 +95,13 @@ if [ "${SERVER}" = "" ]; then
     netplan apply
     ifconfig
 
-    ip_addreses=()
+    ip_addreses=""
     for interface in $interfaces
     do
         cmd="lava-echo-ipv4"
         if which "${cmd}"; then
             ipaddr=$(${cmd} "${interface}" | tr -d '\0')
-            ip_addreses=("${ip_addreses[@]}" "${ipaddr}")
+            ip_addreses="${ip_addreses} ${ipaddr}"
             if [ -z "${ipaddr}" ]; then
                 echo "WARNING: could not find ${interface} adress, check phisial connection"
             fi
@@ -115,30 +112,32 @@ if [ "${SERVER}" = "" ]; then
 
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} num_server_interfaces length="${#ip_addreses[@]}"
+        ${cmd} num_server_interfaces s_length="$(echo -n ${ip_addreses} | wc -w)"
     fi
 
-    cmd="lava-wait"
-    if which "${cmd}"; then
-        ${cmd} num_client_interfaces
-    fi
+    # TODO
+    # cmd="lava-wait"
+    # if which "${cmd}"; then
+    #     ${cmd} num_client_interfaces
+    #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
+    # fi
 
     r_s_counter=0
-    for active_interface in ${ip_addreses[@]}
+    for active_interface in ${ip_addreses}
     do
         cmd="lava-send"
         if which "${cmd}"; then
             ${cmd} server-ready-${r_s_counter} ipaddr="${ipaddr}"
             r_s_counter=$((r_s_counter+1))
 
-        cmd="iperf3 -s -B ${active_interface} -D"
-        ${cmd}
-        if pgrep -f "${cmd}" > /dev/null; then
-            result="pass"
-        else
-            result="fail"
-        fi
-        echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
+            cmd="iperf3 -s -B ${active_interface} -D"
+            ${cmd}
+            if pgrep -f "${cmd}" > /dev/null; then
+                result="pass"
+            else
+                result="fail"
+            fi
+            echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
         fi
     done
 
@@ -147,7 +146,6 @@ if [ "${SERVER}" = "" ]; then
         ${cmd} client-done
     fi
 else
-    IFS=','
     for interface in $interfaces
     do
         static_interface="    ${interface}:
@@ -159,36 +157,56 @@ else
     netplan apply
     ifconfig
 
+
     cmd="lava-wait"
     if which "${cmd}"; then
-        ${cmd} server-ready
-        SERVER=$(grep "ipaddr" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
+        ${cmd} num_server_interfaces
+        num_servers=$(grep "s_length" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     else
         echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
     fi
 
-    if [ -z "${SERVER}" ]; then
-        echo "ERROR: no server specified"
+    if [ "${num_servers}" -eq 0 ]; then
+        echo "ERROR: The number is active interfaces is 0"
         exit 1
     fi
+
+
+    counter=1
+    while [ ${counter} -le ${num_servers} ]
+    do
+        cmd="lava-wait"
+        ${cmd} server-ready-${counter}
+        SERVER=$(grep "ipaddr" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
+
+        # TODO log interfaces
+        stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+            | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
+
+        # Parse logfile.
+        if [ "${THREADS}" -eq 1 ]; then
+            grep -E "(sender|receiver)" "${LOGFILE}" \
+                | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
+                | tee -a "${RESULT_FILE}"
+        elif [ "${THREADS}" -gt 1 ]; then
+            grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
+                | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
+                | tee -a "${RESULT_FILE}"
+        fi
+
+        counter=$((counter + 1))
+    done
+
     # We are running in client mode
     # Run iperf test with unbuffered output mode.
     # stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
     #     | tee "${LOGFILE}"
 
-    stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-        | tee "${LOGFILE}"
 
-    # Parse logfile.
-    if [ "${THREADS}" -eq 1 ]; then
-        grep -E "(sender|receiver)" "${LOGFILE}" \
-            | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
-            | tee -a "${RESULT_FILE}"
-    elif [ "${THREADS}" -gt 1 ]; then
-        grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
-            | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
-            | tee -a "${RESULT_FILE}"
-    fi
+
+#    stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+#        | tee "${LOGFILE}"
+
 
     cmd="lava-send"
     if which "${cmd}"; then
