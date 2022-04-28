@@ -74,25 +74,16 @@ do
     interfaces="${interfaces} $(echo $line | cut -d',' -f1)"
 done
 
-static_network_header="network:
-  version: 2
-  renderer: networkd
-  ethernets:"
-
-echo "$static_network_header" > /etc/netplan/01-netcfg.yaml
-global_adress=100
+global_adress=130
 
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
+    /etc/init.d/network-manager restart
     for interface in $interfaces
     do
-        static_interface="    ${interface}:
-        dhcp4: no
-        addresses: [192.168.${global_adress}.0/24]"
-        echo "$static_interface" >> /etc/netplan/01-netcfg.yaml
+        ifconfig ${interface} 192.168.${global_adress}.10 netmask 255.255.255.0
         global_adress=$((global_adress+1))
     done
-    netplan apply
     ifconfig
     sleep 2
 
@@ -149,14 +140,11 @@ if [ "${SERVER}" = "" ]; then
 else
     for interface in $interfaces
     do
-        static_interface="    ${interface}:
-        dhcp4: no
-        addresses: [192.168.${global_adress}.1/24]"
-        echo "$static_interface" >> /etc/netplan/01-netcfg.yaml
+        ifconfig ${interface} 192.168.${global_adress}.11 netmask 255.255.255.0
         global_adress=$((global_adress+1))
     done
-    netplan apply
     ifconfig
+    sleep 2
 
     ip_addreses=""
     for interface in $interfaces
@@ -186,7 +174,7 @@ else
         exit 1
     fi
 
-
+iperf3 -c 192.168.101.10 -B 192.168.101.11 | tee log101.txt; iperf3 -c 192.168.100.10 -B 192.168.100.11 | tee log100.txt
     counter=1
     while [ ${counter} -le ${num_servers} ]
     do
