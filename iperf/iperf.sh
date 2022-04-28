@@ -201,7 +201,7 @@ else
     for server_adress in $server_adreses
     do
         if [ ! -z ${cmd} ]; then
-            cmd="${cmd} &"
+            cmd="${cmd} /&"
         fi
         cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
