@@ -126,7 +126,7 @@ if [ "${SERVER}" = "" ]; then
     do
         r_s_counter=$((r_s_counter+1))
 
-        cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} >/dev/null &"
+        cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} -D >/dev/null &"
 
         # echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
 
