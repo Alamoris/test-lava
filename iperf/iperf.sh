@@ -79,7 +79,7 @@ static_network_header="network:
   renderer: networkd
   ethernets:"
 
-echo $static_network_header > /etc/netplan/01-netcfg.yaml
+echo "$static_network_header" > /etc/netplan/01-netcfg.yaml
 global_adress=100
 
 # Run local iperf3 server as a daemon when testing localhost.
@@ -89,7 +89,7 @@ if [ "${SERVER}" = "" ]; then
         static_interface="    ${interface}:
         dhcp4: no
         addresses: [192.168.${global_adress}.0/24]"
-        echo $static_interface >> /etc/netplan/01-netcfg.yaml
+        echo "$static_interface" >> /etc/netplan/01-netcfg.yaml
         global_adress=$((global_adress+1))
     done
     netplan apply
@@ -151,7 +151,7 @@ else
         static_interface="    ${interface}:
         dhcp4: no
         addresses: [192.168.${global_adress}.1/24]"
-        echo $static_interface >> /etc/netplan/01-netcfg.yaml
+        echo "$static_interface" >> /etc/netplan/01-netcfg.yaml
         global_adress=$((global_adress+1))
     done
     netplan apply
