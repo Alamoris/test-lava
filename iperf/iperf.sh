@@ -110,7 +110,7 @@ if [ "${SERVER}" = "" ]; then
 
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} num_server_interfaces s_length=" $(echo -n ${ip_addreses} | wc -w)"
+        ${cmd} num_server_interfaces s_length="$(echo -n ${ip_addreses} | wc -w)"
     fi
 
     # TODO
@@ -137,7 +137,7 @@ if [ "${SERVER}" = "" ]; then
 
     cmd="lava-send"
     if which "${cmd}"; then
-        ${cmd} servers-ready ipaddrs="${ip_addreses}"
+        ${cmd} servers-ready ipaddrs="$(echo ${ip_addreses} | xargs)"
     fi
 
     cmd="lava-wait"
