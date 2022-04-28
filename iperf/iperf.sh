@@ -94,7 +94,7 @@ if [ "${SERVER}" = "" ]; then
     do
         cmd="lava-echo-ipv4"
         if which "${cmd}"; then
-            ipaddr=$(${cmd},"${interface}" | tr -d '\0')
+            ipaddr=$(${cmd} "${interface}" | tr -d '\0')
 
             # Check if interface really active
             if ethtool ${interface} | grep -q "Link detected: yes"; then
