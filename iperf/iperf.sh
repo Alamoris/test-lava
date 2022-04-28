@@ -94,6 +94,7 @@ if [ "${SERVER}" = "" ]; then
     done
     netplan apply
     ifconfig
+    sleep 2
 
     ip_addreses=""
     for interface in $interfaces
