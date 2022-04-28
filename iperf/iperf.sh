@@ -122,12 +122,12 @@ if [ "${SERVER}" = "" ]; then
     #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     # fi
 
-    r_s_counter=0
+    r_s_counter=1
     for active_interface in ${ip_addreses}
     do
         cmd="lava-send"
         if which "${cmd}"; then
-            ${cmd} server-ready-${r_s_counter} ipaddr="${ipaddr}"
+            ${cmd} server-ready-${r_s_counter} ipaddr="${active_interface}"
             r_s_counter=$((r_s_counter+1))
 
             cmd="iperf3 -s -B ${active_interface} -D"
@@ -157,6 +157,20 @@ else
     netplan apply
     ifconfig
 
+    ip_addreses=""
+    for interface in $interfaces
+    do
+        cmd="lava-echo-ipv4"
+        if which "${cmd}"; then
+            ipaddr=$(${cmd} "${interface}" | tr -d '\0')
+            ip_addreses="${ip_addreses} ${ipaddr}"
+            if [ -z "${ipaddr}" ]; then
+                echo "WARNING: could not find ${interface} adress, check phisial connection"
+            fi
+        else
+            echo "WARNING: command ${cmd} not found. We are not running in the LAVA environment."
+        fi
+    done
 
     cmd="lava-wait"
     if which "${cmd}"; then
@@ -180,7 +194,7 @@ else
         SERVER=$(grep "ipaddr" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
 
         # TODO log interfaces
-        stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+        stdbuf -o0 iperf3 -c "${SERVER}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
 
         # Parse logfile.
