@@ -206,7 +206,7 @@ else
 #        fi
 #        cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
 #            | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
-        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
         counter=$((counter + 1))
     done
@@ -217,16 +217,11 @@ else
     counter=1
     for server_adress in $server_adreses
     do
-        # Parse logfile.
-        if [ "${THREADS}" -eq 1 ]; then
-            grep -E "${LOGFILE}-ens1f$((counter - 1)).txt" \
-                | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
-                | tee -a "${RESULT_FILE}"
-        elif [ "${THREADS}" -gt 1 ]; then
-            grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
-                | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
-                | tee -a "${RESULT_FILE}"
-        fi
+        # TODO different interface names
+        interface_name="ens1f$((counter - 1))"
+        grep -E "(sender|receiver)" "${LOGFILE}-${interface_name}.txt" \
+            | awk '{printf("iperf_%s_%s pass %s %s\n", in,$NF,$7,$8)}' in=${interface_name} \
+            | tee -a "${RESULT_FILE}"
         counter=$((counter + 1))
     done
 
