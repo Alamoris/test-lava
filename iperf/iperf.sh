@@ -220,7 +220,7 @@ else
         # TODO different interface names
         interface_name="ens1f$((counter - 1))"
         grep -E "(sender|receiver)" "${LOGFILE}-${interface_name}.txt" \
-            | awk '{printf("iperf_%s_%s pass %s %s\n", in,$NF,$7,$8)}' in=${interface_name} \
+            | awk -v iname=${interface_name} '{printf("iperf_%s_%s pass %s %s\n", iname,$NF,$7,$8)}' \
             | tee -a "${RESULT_FILE}"
         counter=$((counter + 1))
     done
