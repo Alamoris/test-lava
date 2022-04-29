@@ -210,9 +210,6 @@ else
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
         counter=$((counter + 1))
     done
-    unset IFS
-
-    ${cmd}
 
     counter=1
     for server_adress in $server_adreses
@@ -224,8 +221,7 @@ else
             | tee -a "${RESULT_FILE}"
         counter=$((counter + 1))
     done
-
-    cat ${RESULT_FILE}
+    unset IFS
 
     cmd="lava-send"
     if which "${cmd}"; then
