@@ -138,6 +138,8 @@ if [ "${SERVER}" = "" ]; then
     if which "${cmd}"; then
         ${cmd} client-done
     fi
+
+    pgrep iperf3 | xargs kill
 else
     for interface in $interfaces
     do
