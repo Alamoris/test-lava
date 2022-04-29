@@ -125,8 +125,6 @@ if [ "${SERVER}" = "" ]; then
     #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
     # fi
 
-    echo Path
-    echo $PATH
     IFS=','
     cmd=""
     r_s_counter=1
