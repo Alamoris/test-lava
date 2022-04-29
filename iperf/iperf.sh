@@ -201,12 +201,13 @@ else
     counter=1
     for server_adress in $server_adreses
     do
-        if [ ! -z ${cmd} ]; then
-            cmd="${cmd} /&"
-        fi
-        cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-            | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
-
+#        if [ ! -z ${cmd} ]; then
+#            cmd="${cmd} /&"
+#        fi
+#        cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+#            | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
+        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
+            | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
         counter=$((counter + 1))
     done
     unset IFS
