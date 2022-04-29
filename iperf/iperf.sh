@@ -214,28 +214,23 @@ else
 
     ${cmd}
 
-    # Parse logfile.
-    if [ "${THREADS}" -eq 1 ]; then
-        grep -E "(sender|receiver)" "${LOGFILE}" \
-            | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
-            | tee -a "${RESULT_FILE}"
-    elif [ "${THREADS}" -gt 1 ]; then
-        grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
-            | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
-            | tee -a "${RESULT_FILE}"
-    fi
+    counter=1
+    for server_adress in $server_adreses
+    do
+        # Parse logfile.
+        if [ "${THREADS}" -eq 1 ]; then
+            grep -E "${LOGFILE}-ens1f$((counter - 1)).txt" \
+                | awk '{printf("iperf_%s pass %s %s\n", $NF,$7,$8)}' \
+                | tee -a "${RESULT_FILE}"
+        elif [ "${THREADS}" -gt 1 ]; then
+            grep -E "[SUM].*(sender|receiver)" "${LOGFILE}" \
+                | awk '{printf("iperf_%s pass %s %s\n", $NF,$6,$7)}' \
+                | tee -a "${RESULT_FILE}"
+        fi
+        counter=$((counter + 1))
+    done
 
-
-    # We are running in client mode
-    # Run iperf test with unbuffered output mode.
-    # stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-    #     | tee "${LOGFILE}"
-
-
-
-#    stdbuf -o0 iperf3 -c "${SERVER}" -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-#        | tee "${LOGFILE}"
-
+    cat ${RESULT_FILE}
 
     cmd="lava-send"
     if which "${cmd}"; then
