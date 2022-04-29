@@ -75,7 +75,7 @@ do
     interfaces="${interfaces} $(echo $line | cut -d',' -f1)"
 done
 
-global_adress=130
+global_adress=100
 
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
@@ -118,24 +118,11 @@ if [ "${SERVER}" = "" ]; then
         ${cmd} num_server_interfaces s_length="${server_ips}"
     fi
 
-    # TODO
-    # cmd="lava-wait"
-    # if which "${cmd}"; then
-    #     ${cmd} num_client_interfaces
-    #     num_ci=$(grep "fffff" /tmp/lava_multi_node_cache.txt | awk -F"=" '{print $NF}')
-    # fi
-
     IFS=','
     cmd=""
-    r_s_counter=1
     for active_interface in ${ip_addreses}
     do
-        r_s_counter=$((r_s_counter+1))
-
-        #cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} -D >/dev/null &"
         iperf3 -s -B ${active_interface} -p ${PORT} -D
-
-        # echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
     done
     unset IFS
 
@@ -201,11 +188,6 @@ else
     counter=1
     for server_adress in $server_adreses
     do
-#        if [ ! -z ${cmd} ]; then
-#            cmd="${cmd} /&"
-#        fi
-#        cmd="${cmd} stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" -P "${THREADS}" "${REVERSE}" "${AFFINITY}" 2>&1 \
-#            | tee "${LOGFILE}-ens1f$((counter - 1)).txt""
         stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt"
         counter=$((counter + 1))
