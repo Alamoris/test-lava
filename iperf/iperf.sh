@@ -133,7 +133,7 @@ if [ "${SERVER}" = "" ]; then
         r_s_counter=$((r_s_counter+1))
 
         #cmd="${cmd} iperf3 -s -B ${active_interface} -p ${PORT} -D >/dev/null &"
-        cmd="iperf3 -s -B ${active_interface} -p ${PORT} -D >/dev/null /&"
+        cmd="iperf3 -s -B ${active_interface} -p ${PORT} -D"
         ${cmd}
 
         # echo "iperf3_server_${r_s_counter}_started ${result}" | tee -a "${RESULT_FILE}"
@@ -141,7 +141,7 @@ if [ "${SERVER}" = "" ]; then
     unset IFS
 
     # TODO maybe need to check by pid
-    ${cmd}
+    # ${cmd}
 
     cmd="lava-send"
     if which "${cmd}"; then
