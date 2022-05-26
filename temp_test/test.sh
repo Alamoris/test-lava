@@ -1,6 +1,5 @@
 #!/bin/sh -ex
 
 for i in {1..5}; do
-	touch $i &
-	sleep $i
+    touch $i && sleep $i &
 done
