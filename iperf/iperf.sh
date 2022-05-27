@@ -195,7 +195,7 @@ else
     do
         # stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
         #    | tee "${LOGFILE}-ens1f$((counter - 1)).txt" &
-        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" 2>"${LOGFILE}-ens1f$((counter - 1)).txt"
+        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" >"${LOGFILE}-ens1f$((counter - 1)).txt" &
         [ -z "$processes" ] && proc="$!" || proc="${processes}|$!"
         counter=$((counter + 1))
     done
