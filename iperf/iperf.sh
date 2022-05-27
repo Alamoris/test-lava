@@ -190,11 +190,19 @@ else
     IFS=','
     cmd=""
     counter=1
+    processes=""
     for server_adress in $server_adreses
     do
         stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
             | tee "${LOGFILE}-ens1f$((counter - 1)).txt" &
+        [ -z "$processes" ] && proc="$!" || proc="${processes}|$!"
         counter=$((counter + 1))
+    done
+
+    # Waiting for every aperf test is finished
+    while ( ps aux | grep -E "$proc" | grep -v grep )
+    do
+        sleep 0.3
     done
 
     counter=1
