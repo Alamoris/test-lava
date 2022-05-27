@@ -20,7 +20,6 @@ REVERSE=""
 # CPU affinity is blank by default, meaning no affinity.
 # CPU numbers are zero based, eg AFFINITY="-A 0" for the first CPU
 AFFINITY=""
-ETH="eth0"
 PORT="8000"
 
 usage() {
@@ -79,6 +78,8 @@ global_adress=100
 
 # Run local iperf3 server as a daemon when testing localhost.
 if [ "${SERVER}" = "" ]; then
+    # Server part
+
     /etc/init.d/network-manager restart
     for interface in $interfaces
     do
@@ -141,6 +142,7 @@ if [ "${SERVER}" = "" ]; then
 
     pgrep iperf3 | xargs kill
 else
+    # Client part
     for interface in $interfaces
     do
         ifconfig ${interface} 192.168.${global_adress}.11 netmask 255.255.255.0
@@ -181,7 +183,7 @@ else
     fi
 
     if [ "${server_adreses}" -eq 0 ]; then
-        echo "ERROR: The number f servers is 0"
+        echo "ERROR: No information about running servers received"
         exit 1
     fi
 
