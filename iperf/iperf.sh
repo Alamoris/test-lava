@@ -207,8 +207,8 @@ else
     do
         sleep 0.5
     done
+    set -x
 
-    sel -x
     counter=1
     for server_adress in $server_adreses
     do
