@@ -196,6 +196,7 @@ else
         # stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
         #    | tee "${LOGFILE}-ens1f$((counter - 1)).txt" &
         stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" >"${LOGFILE}-ens1f$((counter - 1)).txt" &
+        echo "Launched iperf client for server ip ${server_adress}, on ens1f$((counter - 1)) interface"
         [ -z "$processes" ] && proc="$!" || proc="${processes}|$!"
         counter=$((counter + 1))
     done
@@ -203,7 +204,7 @@ else
 
     set +x
     # Waiting for every aperf test is finished
-    while ( ps aux | grep -E "$proc" | grep -v grep )
+    while ( ps aux | grep -E "$proc" | grep -v grep >/dev/null)
     do
         sleep 0.5
     done
