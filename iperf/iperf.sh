@@ -21,6 +21,7 @@ REVERSE=""
 # CPU numbers are zero based, eg AFFINITY="-A 0" for the first CPU
 AFFINITY=""
 PORT="8000"
+PREFIX="ens"
 
 usage() {
     echo "Usage: $0 [-c server] [-e server ethernet device] [-t time] [-p number] [-v version] [-A cpu affinity] [-R] [-s true|false]" 1>&2
@@ -195,8 +196,8 @@ else
     do
         # stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" "${AFFINITY}" 2>&1 \
         #    | tee "${LOGFILE}-ens1f$((counter - 1)).txt" &
-        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" >"${LOGFILE}-ens1f$((counter - 1)).txt" &
-        echo "Launched iperf client for server ip ${server_adress}, on ens1f$((counter - 1)) interface"
+        stdbuf -o0 iperf3 -c "${server_adress}" -B $(echo -n $ip_addreses | cut -d' ' -f${counter}) -p 8000 -t "${TIME}" "${REVERSE}" >"${LOGFILE}-${PREIFX}1f$((counter - 1)).txt" &
+        echo "Launched iperf client for server ip ${server_adress}, on ${PREIFX}1f$((counter - 1)) interface"
         [ -z "$processes" ] && proc="$!" || proc="${processes}|$!"
         counter=$((counter + 1))
     done
@@ -214,7 +215,7 @@ else
     for server_adress in $server_adreses
     do
         # TODO different interface names
-        interface_name="ens1f$((counter - 1))"
+        interface_name="${PREIFX}1f$((counter - 1))"
         grep -E "(sender|receiver)" "${LOGFILE}-${interface_name}.txt" \
             | awk -v iname=${interface_name} '{printf("iperf_%s_%s pass %s %s\n", iname,$NF,$7,$8)}' \
             | tee -a "${RESULT_FILE}"
